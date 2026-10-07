@@ -58,7 +58,7 @@ python app.py ask 'vintage graphic tee under $30'
 
 > **Quote your queries with single quotes**, on every operating system. In
 > PowerShell, `"vintage graphic tee under $30"` in double quotes silently
-> becomes `vintage graphic tee under ` — PowerShell reads `$30` as a variable
+> becomes `vintage graphic tee under` — PowerShell reads `$30` as a variable
 > and substitutes nothing. You get results with no price ceiling and no error
 > saying so. Single quotes are literal in PowerShell, bash and zsh alike.
 

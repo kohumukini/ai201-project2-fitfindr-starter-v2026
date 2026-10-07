@@ -41,7 +41,7 @@
 
 <!-- Three or four sentences: what a user asks for, and what they get back. -->
 
-
+The purpose of this tool is to serve as a wardrobe for the user. A user will ask the system a styling type and their constraints, whether they prefer red or black clothing, have a limiting budget, or even just prefer boots over sneakers. Then, the system will return a wardrobe that matches the users' query.
 
 ---
 
@@ -59,24 +59,34 @@
 
 ### `search_listings`
 
-- **What it does:**
-- **Inputs:** <!-- name and type each: `max_price` (float), not "a price" -->
+- **What it does:** Searches listings.json for items matching the user's description alongside an optional sizing and price filtering.
+- **Inputs:**
+  - `description` (str)
+  - `size` (str) | None
+  - `max_price` (float) | None
 - **Returns:**
-- **When it has nothing:**
+  - list[dict] - A list of dicts to describe wardrobe items, each with price, title, size, etc.
+- **When it has nothing:** Return an empty list `[]`
 
 ### `suggest_outfit`
 
-- **What it does:**
+- **What it does:** Given a new clothing item based on the user's input, the system suggests an outfit or two with clothing that matches the new item.
 - **Inputs:**
+  - `new_item` (dict)
+  - `wardrobe` (dict)
 - **Returns:**
-- **When it has nothing:**
+  - `model_response` (str) - The model response that describes a possible outfit given the new item.
+- **When it has nothing:** Return general styling advice or ask the user for some kind of clothing input for styling advice (uncertain).
 
 ### `create_fit_card`
 
-- **What it does:**
+- **What it does:** Based on the user provided outfit & new item, the system will write a caption to describe the new item and how it fits into the outfit provided?
 - **Inputs:**
+  - `outfit` (str)
+  - `new_item` (dict)
 - **Returns:**
-- **When it has nothing:**
+  - `caption` (str) - Describes the outfit
+- **When it has nothing:** Re-ask the user for input if provided no arguments or whitespace arguments
 
 ---
 

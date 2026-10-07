@@ -67,17 +67,25 @@ def search_listings(
     realistic — thrift listings often have no brand. If something you write
     assumes a brand is always there, you will find out in unit 4.
 
-    TODO:
-        1. Load every listing with load_listings().
-        2. Filter by max_price and by size, when each is provided.
-        3. Score what's left by keyword overlap with `description`.
-        4. Drop anything scoring zero.
-        5. Sort by score, highest first, and return the listing dicts —
-           at most config.SEARCH_RESULT_LIMIT of them.
-
     Test it from a terminal before you move on:
         python -c "from tools import search_listings; print(search_listings('graphic tee', max_price=30))"
     """
+    
+        # 1. Load every listing with load_listings().
+    listings = load_listings()
+        # 2. Filter by max_price and by size, when each is provided.
+    
+    filtered_listings = [
+        item for item in listings 
+        if item.get("price", float('inf')) <= max_price
+        and item.get('size') == size
+    ]
+        # 3. Score what's left by keyword overlap with `description`.
+    
+        # 4. Drop anything scoring zero.
+        # 5. Sort by score, highest first, and return the listing dicts —
+        #    at most config.SEARCH_RESULT_LIMIT of them.
+    
     # TODO: replace this with your implementation
     return []
 
