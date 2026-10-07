@@ -24,7 +24,7 @@ data earns credit; *"80% seemed reasonable"* does not.
 Given a query that matches at least one listing, the agent completes all three
 tool calls and returns a fit card — in at least 4 of 5 tries.
 
-**Why this target:**
+**Why this target:** It is unreasonable to assume the system will receive enough context to find matching outfits for the user. If the outfit does not pass the `search_results` function, there will be no outfit suggestion or fit card creation.
 <!-- Why 4 of 5 and not 5 of 5? Something about your search, probably —
      "my search is a plain keyword match and some phrasings will miss" is a
      real answer. -->
@@ -36,7 +36,7 @@ tool calls and returns a fit card — in at least 4 of 5 tries.
 Given a query that matches no listings, the agent stops before calling
 `suggest_outfit` and returns a message naming what to change — 5 of 5 tries.
 
-**Why this target:**
+**Why this target:** 5 of 5 is a reasonable guardrail because it means the system correctly identifies when it does not contain have the information, or when the wardrobe does not contain the described clothing. It is more reasonable for a model to say "I don't know" than to give a catastrophic answer through hallucination.
 <!-- Why is 5 of 5 reasonable here when criterion 1 isn't? What's different
      about this path? -->
 
@@ -44,6 +44,7 @@ Given a query that matches no listings, the agent stops before calling
 
 ## 3. Something about state
 
+Given an item that reaches `suggest_outfit`, the item logged as received by the function and the next function, `create_fit_card`, is exactly equal to the `search_results` entry, 5 of 5 times.
 <!-- YOU WRITE THIS ONE.
 
      How would you know that the item your search found is the same item the
@@ -54,11 +55,7 @@ Given a query that matches no listings, the agent stops before calling
      compares session["selected_item"] against what actually reached
      suggest_outfit is the shape you're after. -->
 
-
-
-**Why this target:**
-
-
+**Why this target:** This validates the passage of the clothing item through the system, ensuring that objects passed will not be tampered with. 5 of 5 times to ensure item integrity through the process.
 
 ---
 
@@ -75,11 +72,11 @@ Given a query that matches no listings, the agent stops before calling
      sentence? A card longer than a caption anyone would post? Any of those can
      be turned into a number. -->
 
-
+For 5 of 5 items, each fit card contains the item's price and its platform (4 of 5)
 
 **Why this target:**
 
-
+A string check is necessary to validate the item being sent through the system, and 4 of 5 allows for leniency given a null value.
 
 ---
 
@@ -92,11 +89,11 @@ Given a query that matches no listings, the agent stops before calling
      search respects a price ceiling — anything, as long as it names a number
      or an observable outcome. -->
 
-
+Given 5 different items with different price ceilings, every listing in search_results has a price <= ceiling, 5 of 5 times.
 
 **Why this target:**
 
-
+There is no variance outside the size of the number, which means the price could vastly change without being recognized at the end. This also helps validate criterion 1, ensuring that the queries match the listing. 5 of 5 times, the model must filter by the correct amount. 
 
 ---
 

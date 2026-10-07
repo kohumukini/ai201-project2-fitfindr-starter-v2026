@@ -103,7 +103,7 @@ The purpose of this tool is to serve as a wardrobe for the user. A user will ask
      The grader checks your code against what you claim here, so the file and
      function have to be real. -->
 
-**Branch rule:** If search_listings return an emtpy list, put a descriptive message in the session and stop. Otherwise, check and take the first result and go to suggest-outfit.
+**Branch rule:** If search_listings return an empty list, put a descriptive message in the session and stop. Otherwise, validate the first result and go to suggest-outfit.
 
 **Where it lives:** `agent.py::run_agent`
 
