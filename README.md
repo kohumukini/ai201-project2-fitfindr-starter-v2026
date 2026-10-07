@@ -138,12 +138,41 @@ $ python -c "from tools import search_listings; print(search_listings('graphic t
 ```
 
 ```
-$ python -c "from tools import suggest_outfit; ..."
+$ python -c 'from tools import suggest_outfit; print(suggest_outfit({
+     "id": "lst_005",
+     "title": "Corduroy Wide-Leg Pants — Rust",
+     "description": "Beautiful rust-colored cords in a wide-leg silhouette. High-waisted. Minor pilling on the seat but otherwise great condition.",
+     "category": "bottoms",
+     "style_tags": ["vintage", "cottagecore", "70s", "earth tones"],
+     "size": "W28",
+     "condition": "good",
+     "price": 32.00,
+     "colors": ["rust", "orange"],
+     "brand": None,
+     "platform": "depop"
+     }, 
+     {} 
+    ))'
 
 ```
 
 ```
-$ python -c "from tools import create_fit_card; ..."
+$ python -c 'from tools import create_fit_card; print(create_fit_card(
+     "Tuck a vintage white cotton blouse with puff sleeves and lace or eyelet detailing into the waistband. Layer a chunky, thrifted cream or oatmeal-colored cardigan over the blouse, letting thecuffs peek out. Wear worn-in canvas sneakers or brown leather flat boots, and accessorize with a tortoiseshell headband or a brass pendant necklace.", 
+     {
+          "id": "lst_005",
+          "title": "Corduroy Wide-Leg Pants — Rust",
+          "description": "Beautiful rust-colored cords in a wide-leg silhouette. High-waisted. Minor pilling on the seat but otherwise great condition.",
+          "category": "bottoms",
+          "style_tags": ["vintage", "cottagecore", "70s", "earth tones"],
+          "size": "W28",
+          "condition": "good",
+          "price": 32.00,
+          "colors": ["rust", "orange"],
+          "brand": None,
+          "platform": "depop"
+     }
+     ))'
 
 ```
 
@@ -160,15 +189,15 @@ $ python -c "from tools import create_fit_card; ..."
 
 **Moment 1**
 
-- *What I asked for:*
-- *What came back:*
-- *What I changed:*
+- *What I asked for:* I asked claude to revamp most of the functions that I had created by adjusting the logic to fit regex
+- *What came back:* Claude came back with supporting functions and additional variables that allowed for regex search and destructuring of the description
+- *What I changed:* Claude had specified a return value for the function instaed of returning None.
 
 **Moment 2**
 
-- *What I asked for:*
-- *What came back:*
-- *What I changed:*
+- *What I asked for:* I asked claude to go over the idea I had for building the agent based on the design, and refurbish it into code.
+- *What came back:* The full agent created based on the context provided. 
+- *What I changed:* Claude did not include trace.step, so we went through the process of adding trace.step, and I had claude go over and validate the syntax I provided. 
 
 <!-- ═══════════════════════ UNIT 4 — THE TEST ═══════════════════════
 
