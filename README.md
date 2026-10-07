@@ -103,14 +103,17 @@ The purpose of this tool is to serve as a wardrobe for the user. A user will ask
      The grader checks your code against what you claim here, so the file and
      function have to be real. -->
 
-**Branch rule:**
+**Branch rule:** If search_listings return an emtpy list, put a descriptive message in the session and stop. Otherwise, check and take the first result and go to suggest-outfit.
 
 **Where it lives:** `agent.py::run_agent`
 
 **How the query is parsed:** <!-- regex, string splitting, or asking the model — say which -->
+Regex > Model (fallback)
 
 **What moves through the session:** <!-- which fields, in what order -->
-
+query -> parsed -> search_results  selected_item -> outfit_suggestion -> fit_card
+                         |              |
+cancel <- error <-  check wardrobe -> found item
 ---
 
 ## Sample Run
