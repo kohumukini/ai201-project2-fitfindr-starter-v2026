@@ -79,11 +79,8 @@ def search_listings(
     This tool finds listings based on a clothing description, with optional size (s, m, l) and max_price filters.
     It returns a list of matching listing dictionaries.
     
-    If there is no description or if the user's request is not clothing-related, do not refuse or halt. Instead, return a list containing a single empty dictionary ([{}])
+    If there is no description or if the user's request is not clothing-related, do not refuse or halt. Instead, return an empty list []
     """
-    
-    if not description or not _is_clothing_related(description): 
-        return [{}]
     
     return _search_listings_impl(description, size, max_price)
 #

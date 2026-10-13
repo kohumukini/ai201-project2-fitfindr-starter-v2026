@@ -129,21 +129,16 @@ def _step_search(session: dict) -> None:
     parsed = session["parsed"]
 
     # The branch: no clothing item in the request means there is nothing to
-    # search for. If the user has a wardrobe, skip search and style that alone.
+    # search for. Skip search and let suggest_outfit style the wardrobe alone,
+    # or give general advice if the wardrobe is empty too.
     if not parsed["description"]:
-        has_wardrobe = bool((session["wardrobe"] or {}).get("items"))
         trace.step(
             "search_listings",
             inputs="description=''",
             returned=[],
-            note="branch: no item requested, suggesting an outfit from the wardrobe"
-            if has_wardrobe
-            else "branch: no item and empty wardrobe, stopping before suggest_outfit",
+            note="branch: no item requested, suggesting an outfit without a listing",
         )
-        if has_wardrobe:
-            session["wardrobe_only"] = True
-        else:
-            session["error"] = _no_results_message(parsed)
+        session["wardrobe_only"] = True
         return
 
     results = call_tool("search_listings", {

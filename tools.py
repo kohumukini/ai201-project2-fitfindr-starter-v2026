@@ -201,8 +201,8 @@ def suggest_outfit(new_item: dict | None, wardrobe: dict) -> str:
         With an empty wardrobe, return general styling advice rather than
         raising or returning "". Unit 4 has you trigger the empty wardrobe on
         purpose, so decide now what it should do.
-        With neither an item nor a wardrobe items, there is nothing to style,
-        so return a message saying so.
+        With neither an item nor wardrobe items, return general styling
+        advice, the same as the empty-wardrobe case.
 
     TODO:
         1. Check whether wardrobe['items'] is empty.
@@ -218,22 +218,32 @@ def suggest_outfit(new_item: dict | None, wardrobe: dict) -> str:
 
     if new_item is None:
         if not items:
-            return (
-                "There's nothing to build an outfit from: no item was "
-                "requested and the wardrobe is empty. Tell me what you're "
-                "looking for or add pieces to your wardrobe."
+            system = (
+                "You are a thrift-store stylist. Give concrete, practical "
+                "styling advice in plain text, with no preamble."
             )
-        system = (
-            "You are a thrift-store stylist. Only combine items from the "
-            "user's wardrobe list, and name them exactly as listed. Never "
-            "invent pieces the user doesn't own. Plain text, no preamble."
-        )
-        prompt = (
-            "My wardrobe:\n"
-            f"{_format_wardrobe(items)}\n\n"
-            "Suggest one or two outfits I can put together from these pieces "
-            "alone. Say briefly why each works. Keep it under 200 words."
-        )
+            prompt = (
+                "I haven't picked out a piece to buy and I haven't told you "
+                "what's in my wardrobe. Give me general styling advice: one "
+                "or two versatile outfits made of easy-to-find secondhand "
+                "pieces (for example 'straight-leg jeans' or 'white "
+                "sneakers'), and a tip or two for thrifting them. Keep it "
+                "under 150 words."
+            )
+        else:
+            system = (
+                "You are a thrift-store stylist. Only combine items from the "
+                "user's wardrobe list, and name them exactly as listed. "
+                "Never invent pieces the user doesn't own. Plain text, no "
+                "preamble."
+            )
+            prompt = (
+                "My wardrobe:\n"
+                f"{_format_wardrobe(items)}\n\n"
+                "Suggest one or two outfits I can put together from these "
+                "pieces alone. Say briefly why each works. Keep it under 200 "
+                "words."
+            )
         response = generate(prompt, system=system).strip()
         return response or "No styling suggestion came back. Try again in a moment."
 

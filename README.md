@@ -281,21 +281,89 @@ that produced it:
 **Happy path**
 
 ```
+[1] parse_query
+      in:  vintage graphic tee under 0
+      out: {'description': 'vintage graphic tee', 'size': None, 'max_price': 30.0}
+[2] search_listings
+      in:  description='vintage graphic tee', size=None, max_price=30.0
+      out: 10 items: Y2K Baby Tee — Butterfly Print, Vintage Band Tee — Faded Grey, Graphic Tee — 2003 Tour Bootleg Style … +7 more
+      →    branch: results found, selecting the first
+[3] suggest_outfit
+      in:  item='Y2K Baby Tee — Butterfly Print', wardrobe_items=10
+      out: Outfit 1: - Y2K Baby Tee — Butterfly Print - Baggy straight-leg jeans, dark wash - Chunky white sneakers - Bla…
+[4] create_fit_card
+      in:  item='Y2K Baby Tee — Butterfly Print', outfit='Outfit 1:\n- Y2K Baby Tee — Butterfly Print\n- Baggy straight-l…
+      out: Scored this Y2K butterfly baby tee for just $18 on Depop and I'm obsessed with the early 2000s mall-rat energy…
 
+  Found:    Y2K Baby Tee — Butterfly Print — $18.0 on depop
+
+  Outfit:   Outfit 1:
+- Y2K Baby Tee — Butterfly Print
+- Baggy straight-leg jeans, dark wash
+- Chunky white sneakers
+- Black crossbody bag
+
+Why it works: Pairing the fitted baby tee with Baggy straight-leg jeans, dark wash creates a classic Y2K silhouette with a great balance of tight and loose proportions, finished off with Chunky white sneakers and a Black crossbody bag.
+
+Outfit 2:
+- Y2K Baby Tee — Butterfly Print
+- Wide-leg khaki trousers
+- Vintage black denim jacket
+- Black combat boots
+
+Why it works: This look mixes the girly butterfly graphic with edgy and earthy pieces. The Vintage black denim jacket and Black combat boots ground the pastel tee, while the Wide-leg khaki trousers keep the fit relaxed and vintage-inspired.
+
+  Fit card: Scored this Y2K butterfly baby tee for just $18 on Depop and I'm obsessed with the early 2000s mall-rat energy. It looks so good paired with baggy jeans or dressed down with combat boots for that perfect mix of sweet and edgy. 🦋 #thriftfinds #depop
 ```
 
 **Empty search**
 
 ```
+[1] parse_query
+      in:  ...
+      out: {'description': '', 'size': None, 'max_price': None}
+[2] search_listings
+      in:  description=''
+      out: [] (empty)
+      →    branch: no item requested, suggesting an outfit without a listing
+[3] suggest_outfit
+      in:  item=None, wardrobe_items=10
+      out: Outfit 1: - Baggy straight-leg jeans, dark wash - White ribbed tank top - Vintage black denim jacket - Black c…
 
+  Found:    None — $None on None
+
+  Outfit:   Outfit 1:
+- Baggy straight-leg jeans, dark wash
+- White ribbed tank top
+- Vintage black denim jacket
+- Black combat boots
+- Brown leather belt
+- Black crossbody bag
+
+Why it works: The fitted white tank balances the volume of the baggy dark jeans, while the slightly cropped black denim jacket and combat boots add a classic, grunge-inspired edge. The beltand crossbody bag pull the accessories together seamlessly.
+
+Outfit 2:
+- Wide-leg khaki trousers
+- Oversized grey crewneck sweatshirt
+- Chunky white sneakers
+- Black crossbody bag
+
+Why it works: This cozy, minimalist look plays with proportions by pairing ultra-relaxed khaki trousers with an oversized grey crewneck. Chunky white sneakers ground the earth tones with a fresh, streetwear-inspired finish.
+
+  Fit card: None
 ```
 
-**On the MCP move:** <!-- what changed in your code, and whether anything
+<!-- **On the MCP move:**  what changed in your code, and whether anything
 behaved differently afterwards. If the rewire didn't work, say exactly where it
 broke — the error text and the last thing that worked. That earns the point in
-full. -->
+full.  -->
 
+A lot of changes were made: 
 
+- Replaced search_listings() with the mcp tool in agent.py
+- Refactored the parsing system to use llm generation instead of regex
+- Refactored generate() in generate.py to allow for a pydantic model return type
+- Adjusted suggest_outfit to provide generalistic styling advice over user prompt rejection
 
 ---
 
