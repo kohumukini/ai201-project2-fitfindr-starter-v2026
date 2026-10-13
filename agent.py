@@ -13,13 +13,18 @@ Build and test your three tools in `tools.py` first. Then come here.
     python agent.py          runs both example paths below
 """
 
-import re
-
 import config
 import trace
-import re
-from tools import search_listings, suggest_outfit, create_fit_card
-from generate import ModelUnavailable
+from tools import suggest_outfit, create_fit_card
+from generate import ModelUnavailable, generate
+from mcp_client import call_tool
+from pydantic import BaseModel
+from typing import Literal
+
+class ClothingInfo(BaseModel): 
+    description: str = ""
+    size: str | None = None
+    max_price: float | None = None
 
 
 # ── session state ─────────────────────────────────────────────────────────────
@@ -44,6 +49,7 @@ def new_session(query: str, wardrobe: dict) -> dict:
         "search_results": [],        # everything search_listings returned
         "selected_item": None,       # the one you chose — goes into suggest_outfit
         "wardrobe": wardrobe,        # the user's wardrobe
+        "wardrobe_only": False,      # True when no item was requested: style the wardrobe alone
         "outfit_suggestion": None,   # what suggest_outfit returned
         "fit_card": None,            # what create_fit_card returned
         "error": None,               # set when the run ended early
@@ -51,32 +57,6 @@ def new_session(query: str, wardrobe: dict) -> dict:
 
 
 # ── query parsing ─────────────────────────────────────────────────────────────
-
-_PRICE_RE = re.compile(
-    r"(?:\b(?:under|below|less than|up to|at most|no more than|max(?:imum)?)\s*)"
-    r"\$?\s*(\d+(?:\.\d+)?)(?:\s*(?:dollars|bucks|usd))?"
-    r"|\$\s*(\d+(?:\.\d+)?)",
-    re.IGNORECASE,
-)
-
-_SIZE_RE = re.compile(
-    r"\bsize\s*:?\s+"
-    r"(us\s*\d+(?:\.\d+)?"
-    r"|w\d+(?:\s*l\d+)?"
-    r"|\d+(?:\.\d+)?"
-    r"|x{0,3}[sml](?:/x{0,3}[sml])?)\b",
-    re.IGNORECASE,
-)
-
-_EDGE_WORDS = (
-    r"(?:and|in|for|a|an|the|with|looking|find|want|need|i|i'm|im|me|my|some|"
-    r"under|below|size)"
-)
-_EDGE_RE = re.compile(
-    rf"^(?:{_EDGE_WORDS}\s+)+|(?:\s+{_EDGE_WORDS})+$", re.IGNORECASE
-)
-
-
 def _parse_query(query: str) -> dict:
     """
     Split a plain-language request into the three inputs search_listings takes.
@@ -84,25 +64,38 @@ def _parse_query(query: str) -> dict:
     Returns a dict with `description` (str, possibly empty), `size` (str or
     None) and `max_price` (float or None).
     """
-    text = query or ""
+    # The size vocabulary below mirrors the `size` field in data/listings.json.
+    # search_listings matches sizes by exact token, so "medium" or "30" would
+    # silently return nothing — the parser has to emit the listing's own form.
+    system_instruction = """
+        You are a search query parser for a clothing marketplace.
+        Extract three things from the user's request:
+        - description: the core item (cleaned of any price limit or size).
+        - size: the clothing size if specified, otherwise null.
+        - max_price: the maximum price as a number, otherwise null.
 
-    max_price = None
-    price_match = _PRICE_RE.search(text)
-    if price_match:
-        max_price = float(price_match.group(1) or price_match.group(2))
-        text = text[: price_match.start()] + " " + text[price_match.end():]
+        Write size exactly as the marketplace lists it:
+        - Tops and outerwear: S, M, L or XL. Convert words: small -> S,
+          medium -> M, large -> L, extra large -> XL.
+        - Shoes: "US 7", "US 8", "US 8.5" or "US 9". A bare shoe size like
+          "size 9" -> "US 9".
+        - Bottoms (waist): W27 to W32, e.g. "waist 30" or "30 inch" -> "W30".
+        - One Size items: "One Size".
+        If the requested size is not one of these (for example XXS), return it
+        uppercased as typed. Never guess a size the user did not state.
+        
+        If the request names no clothing item (it is not clothing related, or
+        only asks for outfit ideas), return an empty description.
+    """
 
-    size = None
-    size_match = _SIZE_RE.search(text)
-    if size_match:
-        size = re.sub(r"\s+", " ", size_match.group(1)).strip()
-        text = text[: size_match.start()] + " " + text[size_match.end():]
-
-    text = re.sub(r"[,;]+", " ", text)
-    text = re.sub(r"\s+", " ", text).strip(" .!?")
-    description = _EDGE_RE.sub("", text).strip(" .!?")
-
-    return {"description": description, "size": size, "max_price": max_price}
+    model_response = generate(
+        query,
+        system_instruction,
+        temperature=0.0,
+        cache=True,
+        response_schema=ClothingInfo,
+    )
+    return ClothingInfo.model_validate_json(model_response).model_dump()
 
 
 def _no_results_message(parsed: dict) -> str:
@@ -121,6 +114,101 @@ def _no_results_message(parsed: dict) -> str:
     ideas.append(f"trying different or fewer keywords than '{parsed['description']}'")
 
     return "No listings matched your request. Try " + ", or ".join(ideas) + "."
+
+
+# ── loop steps ────────────────────────────────────────────────────────────────
+# Each step reads what it needs from the session, calls one tool, records the
+# result back on the session, and logs one trace line.
+
+def _step_parse(session: dict) -> None:
+    session["parsed"] = _parse_query(session["query"])
+    trace.step("parse_query", inputs=session["query"], returned=str(session["parsed"]))
+
+
+def _step_search(session: dict) -> None:
+    parsed = session["parsed"]
+
+    # The branch: no clothing item in the request means there is nothing to
+    # search for. If the user has a wardrobe, skip search and style that alone.
+    if not parsed["description"]:
+        has_wardrobe = bool((session["wardrobe"] or {}).get("items"))
+        trace.step(
+            "search_listings",
+            inputs="description=''",
+            returned=[],
+            note="branch: no item requested, suggesting an outfit from the wardrobe"
+            if has_wardrobe
+            else "branch: no item and empty wardrobe, stopping before suggest_outfit",
+        )
+        if has_wardrobe:
+            session["wardrobe_only"] = True
+        else:
+            session["error"] = _no_results_message(parsed)
+        return
+
+    results = call_tool("search_listings", {
+        "description": parsed["description"], 
+        "size": parsed["size"], 
+        "max_price": parsed["max_price"]
+    })
+    session["search_results"] = results
+
+    # The branch: an empty result ends the run before suggest_outfit.
+    trace.step(
+        "search_listings",
+        inputs=(
+            f"description={parsed['description']!r}, "
+            f"size={parsed['size']!r}, max_price={parsed['max_price']!r}"
+        ),
+        returned=results,
+        note="branch: results found, selecting the first" if results
+        else "branch: empty, stopping before suggest_outfit",
+    )
+    if results:
+        session["selected_item"] = results[0]
+    else:
+        session["error"] = _no_results_message(parsed)
+
+
+def _step_suggest(session: dict) -> None:
+    item, wardrobe = session["selected_item"], session["wardrobe"]
+    session["outfit_suggestion"] = suggest_outfit(item, wardrobe)
+    trace.step(
+        "suggest_outfit",
+        inputs=(
+            f"item={item['title'] if item else None!r}, "
+            f"wardrobe_items={len((wardrobe or {}).get('items') or [])}"
+        ),
+        returned=session["outfit_suggestion"],
+    )
+
+
+def _step_fit_card(session: dict) -> None:
+    item, outfit = session["selected_item"], session["outfit_suggestion"]
+    session["fit_card"] = create_fit_card(outfit, item)
+    trace.step(
+        "create_fit_card",
+        inputs=f"item={item['title']!r}, outfit={outfit!r}",
+        returned=session["fit_card"],
+    )
+
+
+def _next_step(session: dict):
+    """Pick the next step from what the session already holds."""
+    if not session["parsed"]:
+        return _step_parse
+    if session["selected_item"] is None and not session["wardrobe_only"]:
+        return _step_search
+    if session["outfit_suggestion"] is None:
+        return _step_suggest
+    return _step_fit_card
+
+
+def _is_done(session: dict) -> bool:
+    """A wardrobe-only run has no item to caption, so it ends at the outfit."""
+    if session["error"] is not None or session["fit_card"] is not None:
+        return True
+    return session["wardrobe_only"] and session["outfit_suggestion"] is not None
 
 
 # ── planning loop ─────────────────────────────────────────────────────────────
@@ -143,75 +231,24 @@ def run_agent(query: str, wardrobe: dict) -> dict:
     session["error"] and return before suggest_outfit is ever called.
     Otherwise take the first result and continue to suggest_outfit, then
     create_fit_card.
+
+    Wardrobe-only rule: if the query names no clothing item but the wardrobe
+    has items, skip the search, call suggest_outfit with item=None, and stop.
+    There is no item to caption, so session["fit_card"] stays None and
+    session["wardrobe_only"] is True.
     """
     trace.start_trace()
     session = new_session(query, wardrobe)
-    count = 0
 
     try:
-        while session["fit_card"] is None:
-            count += 1
-            trace.check_iterations(count)
-
-            if not session["parsed"]:
-                session["parsed"] = _parse_query(query)
-                trace.step("parse_query", inputs=query, returned=str(session["parsed"]))
-
-            elif session["selected_item"] is None:
-                parsed = session["parsed"]
-                session["search_results"] = search_listings(
-                    parsed["description"],
-                    size=parsed["size"],
-                    max_price=parsed["max_price"],
-                )
-                empty = not session["search_results"]
-                trace.step(
-                    "search_listings",
-                    inputs=(
-                        f"description={parsed['description']!r}, "
-                        f"size={parsed['size']!r}, max_price={parsed['max_price']!r}"
-                    ),
-                    returned=session["search_results"],
-                    note="branch: empty, stopping before suggest_outfit" if empty
-                    else "branch: results found, selecting the first",
-                )
-                if empty:
-                    session["error"] = _no_results_message(parsed)
-                    return session
-                session["selected_item"] = session["search_results"][0]
-
-            elif session["outfit_suggestion"] is None:
-                session["outfit_suggestion"] = suggest_outfit(
-                    session["selected_item"], session["wardrobe"]
-                )
-
-                trace.step(
-                    "suggest_outfit",
-                    inputs=(
-                        f"item={session['selected_item']['title']!r}, "
-                        f"wardrobe_items={len((session['wardrobe'] or {}).get('items') or [])}"
-                    ),
-                    returned=session["outfit_suggestion"],
-                )
-
-            else:
-                session["fit_card"] = create_fit_card(
-                    session["outfit_suggestion"], session["selected_item"]
-                )
-                trace.step(
-                    "create_fit_card",
-                    inputs=(
-                        f"item={session['selected_item']['title']!r}, "
-                        f"outfit={session['outfit_suggestion']!r}"
-                    ),
-                    returned=session["fit_card"],
-                )
+        iterations = 0
+        while not _is_done(session):
+            iterations += 1
+            trace.check_iterations(iterations)
+            _next_step(session)(session)
 
     except ModelUnavailable as exc:
-        session["error"] = (
-            "The model couldn't be reached, so the run stopped early. "
-            f"{exc}"
-        )
+        session["error"] = f"The model couldn't be reached, so the run stopped early. {exc}"
         trace.step(
             "model_unavailable",
             returned=str(exc),
@@ -227,6 +264,10 @@ def _show(session: dict) -> None:
     if session["error"]:
         print(f"  stopped: {session['error']}")
         print(f"  fit_card is {session['fit_card']!r} — it should still be None here")
+        return
+
+    if session["wardrobe_only"]:
+        print(f"  outfit (wardrobe only): {session['outfit_suggestion']}")
         return
 
     item = session["selected_item"] or {}

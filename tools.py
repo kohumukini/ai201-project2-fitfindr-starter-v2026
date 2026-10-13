@@ -182,7 +182,7 @@ def _format_wardrobe(items: list[dict]) -> str:
     return "\n".join(rows)
 
 
-def suggest_outfit(new_item: dict, wardrobe: dict) -> str:
+def suggest_outfit(new_item: dict | None, wardrobe: dict) -> str:
     """
     Given a thrifted item and the user's wardrobe, suggest one or two outfits.
 
@@ -190,7 +190,9 @@ def suggest_outfit(new_item: dict, wardrobe: dict) -> str:
     about rate limits — the adapter handles pacing for you.
 
     Args:
-        new_item: a listing dict — the item the user is considering.
+        new_item: a listing dict — the item the user is considering — or None
+                  when the user didn't ask for a specific piece. With None, the
+                  outfits are built from the wardrobe alone.
         wardrobe: a wardrobe dict with an 'items' key holding a list of items.
                   **It may be empty.** Handle that.
 
@@ -199,6 +201,8 @@ def suggest_outfit(new_item: dict, wardrobe: dict) -> str:
         With an empty wardrobe, return general styling advice rather than
         raising or returning "". Unit 4 has you trigger the empty wardrobe on
         purpose, so decide now what it should do.
+        With neither an item nor a wardrobe items, there is nothing to style,
+        so return a message saying so.
 
     TODO:
         1. Check whether wardrobe['items'] is empty.
@@ -211,6 +215,28 @@ def suggest_outfit(new_item: dict, wardrobe: dict) -> str:
         python -c "from tools import suggest_outfit; from utils.data_loader import get_example_wardrobe, load_listings; print(suggest_outfit(load_listings()[0], get_example_wardrobe()))"
     """
     items = (wardrobe or {}).get("items") or []
+
+    if new_item is None:
+        if not items:
+            return (
+                "There's nothing to build an outfit from: no item was "
+                "requested and the wardrobe is empty. Tell me what you're "
+                "looking for or add pieces to your wardrobe."
+            )
+        system = (
+            "You are a thrift-store stylist. Only combine items from the "
+            "user's wardrobe list, and name them exactly as listed. Never "
+            "invent pieces the user doesn't own. Plain text, no preamble."
+        )
+        prompt = (
+            "My wardrobe:\n"
+            f"{_format_wardrobe(items)}\n\n"
+            "Suggest one or two outfits I can put together from these pieces "
+            "alone. Say briefly why each works. Keep it under 200 words."
+        )
+        response = generate(prompt, system=system).strip()
+        return response or "No styling suggestion came back. Try again in a moment."
+
     item_block = _describe_listing(new_item)
 
     if not items:

@@ -36,6 +36,8 @@ import time
 
 import config
 
+from pydantic import BaseModel
+
 _call_times: list[float] = []
 _session_calls = 0
 _cache_hits = 0
@@ -59,14 +61,21 @@ class ModelUnavailable(Exception):
     trigger it deliberately by changing one character of your key.
     """
 
-
 # ─── Cache ───────────────────────────────────────────────────────────────────
 
 
-def _cache_key(prompt: str, system: str | None, temperature: float) -> str:
-    blob = json.dumps(
-        [config.MODEL, system or "", prompt, temperature], sort_keys=True
-    )
+def _cache_key(
+    prompt: str,
+    system: str | None,
+    temperature: float,
+    response_schema: type[BaseModel] | None = None,
+) -> str:
+    parts = [config.MODEL, system or "", prompt, temperature]
+    if response_schema is not None:
+        # Only added when a schema is used, so keys for plain-text calls stay
+        # the same and existing cache entries remain valid.
+        parts.append(response_schema.model_json_schema())
+    blob = json.dumps(parts, sort_keys=True)
     return hashlib.sha256(blob.encode("utf-8")).hexdigest()[:32]
 
 
@@ -262,6 +271,7 @@ def generate(
     system: str | None = None,
     cache: bool = True,
     temperature: float | None = None,
+    response_schema: type[BaseModel] | None = None
 ) -> str:
     """
     Send a prompt and get text back.
@@ -304,6 +314,10 @@ def generate(
             _session_calls += 1
 
             call_config = {"temperature": temperature}
+            if response_schema is not None: 
+                call_config['response_mime_type'] = "application/json"
+                call_config["response_schema"] = response_schema
+            
             if system:
                 call_config["system_instruction"] = system
             kwargs = {
