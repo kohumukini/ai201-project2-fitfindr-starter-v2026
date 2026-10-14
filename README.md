@@ -219,16 +219,65 @@ $ python -c 'from tools import create_fit_card; print(create_fit_card(
 
 | Criterion | Target | Try 1 | Try 2 | Try 3 | Try 4 | Try 5 | Verdict |
 |---|---|---|---|---|---|---|---|
-| 1.  |  |  |  |  |  |  |  |
-| 2.  |  |  |  |  |  |  |  |
-| 3.  |  |  |  |  |  |  |  |
-| 4.  |  |  |  |  |  |  |  |
-| 5.  |  |  |  |  |  |  |  |
+| 1. matching query completes | 4 of 5 | PASS | PASS | PASS | PASS | PASS | MET(5/5) |
+| 2. impossible query stops early | 5 of 5 | PASS | PASS | PASS | PASS | PASS | MET(5/5) |
+| empty wardrobe _(diagnostic — not one of your five)_ | 5 of 5 | PASS | PASS | PASS | PASS | PASS | MET(5/5) |
+| 3. starting clothing matches endingn clothing | 5 of 5 | PASS | PASS | PASS | PASS | PASS | MET(5) |
+| 4. fit card contains item's price and platform | 5 of 5 | PASS | PASS | PASS | PASS | PASS | MET(5/5) |
+| 5. items always under the price ceiling | 5 of 5 | PASS | PASS | PASS | PASS | PASS | MET(5/5) |
 
 **Real output from one try**, pasted as text, naming the file and function
 that produced it:
 
 ```
+**Try 5**
+
+- stopped early: no
+- selected_item: Y2K Baby Tee — Butterfly Print ($18.0, depop)
+- search_results: 10
+
+Outfit suggestion:
+
+
+Outfit 1:
+- Y2K Baby Tee — Butterfly Print
+- Baggy straight-leg jeans, dark wash
+- Chunky white sneakers
+- Black crossbody bag
+
+Why it works: Pairing the fitted crop top with the baggy straight-leg jeans nails the quintessential Y2K silhouette. Chunky white sneakers and the black crossbody bag tie the nostalgic streetwear vibe together.
+
+Outfit 2:
+- Y2K Baby Tee — Butterfly Print
+- Wide-leg khaki trousers
+- Brown leather belt
+- Chunky white sneakers
+
+Why it works: The pastel butterfly graphic bridges the gap between Y2K and cottagecore aesthetics, making it a great match for the earthy wide-leg khaki trousers. Adding the brown leather belt pulls the look together with a polished touch.
+
+
+Fit card:
+
+
+Scored this little butterfly print Y2K baby tee on Depop for just $18 and I’m obsessed. It gives major nostalgic streetwear energy when paired with baggy denim, but looks equally good dressed down with khakis. 🦋 #y2kstyle #depopfinds
+
+
+Trace:
+
+
+[1] parse_query
+      in:  vintage graphic tee under $30
+      out: {'description': 'vintage graphic tee', 'size': None, 'max_price': 30.0}
+[2] search_listings
+      in:  description='vintage graphic tee', size=None, max_price=30.0
+      out: 10 items: Y2K Baby Tee — Butterfly Print, Vintage Band Tee — Faded Grey, Graphic Tee — 2003 Tour Bootleg Style … +7 more
+      →    branch: results found, selecting the first
+[3] suggest_outfit
+      in:  item='Y2K Baby Tee — Butterfly Print', wardrobe_items=10
+      out: Outfit 1: - Y2K Baby Tee — Butterfly Print - Baggy straight-leg jeans, dark wash - Chunky white sneakers - Bla…
+[4] create_fit_card
+      in:  item='Y2K Baby Tee — Butterfly Print', outfit='Outfit 1:\n- Y2K Baby Tee — Butterfly Print\n- Baggy straight-l…
+      out: Scored this little butterfly print Y2K baby tee on Depop for just $18 and I’m obsessed. It gives major nostalg…
 
 ```
 
@@ -254,15 +303,16 @@ that produced it:
 
 | # | Criterion | Target | Verdict | How I decided |
 |---|---|---|---|---|
-| 1 |  |  |  |  |
-| 2 |  |  |  |  |
-| 3 |  |  |  |  |
-| 4 |  |  |  |  |
-| 5 |  |  |  |  |
+| 1 | Matching query completes | 4 of 5 | MET | All tested queries went through the entire pipeline and returned a fit-card |
+| 2 | Impossible query stops early | 5 of 5 | MET | Each impossible query was stopped after checking the listings. No outfits were found, and thus, the model refused. |
+| 3 | Starting clothing matches ending clothing | 5 of 5 | MET | All queries started and ended with the same piece of clothing. The attributes of the clothing item also appeard to remain constant through the entire pipeline 5/5 times. |
+| 4 | Fit card contains item's price and platform | 5 of 5 | MET | Each fit card provided mentioned the platform they bought from and the price they got it for. |
+| 5 | Items suggested always lie under the price ceiling | 5 of 5 | FAIL | 5/5 times, the outfits provided were under the maximum price given. HOWEVER, the model suggested the same item 5 of 5 times, which means the model was NOT tested on anything |
 
 **Diagnoses**
 
-
+- A majority of these criteria are too easy to complete and what you'd expect from an agent at the very leasts. 
+- However, criteria 5 is a large failure. The model suggested the same item 5 of 5 times. Regardless of why it suggested the same item, this means the system wasn't accurately tested for varying items within the wardrobe, to ensure they all lie under the budget. 
 
 ---
 
