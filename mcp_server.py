@@ -74,15 +74,24 @@ def search_listings(
     description: str,
     size: str | None = None,
     max_price: float | None = None,
+    platform: str | None = None,
 ) -> list[dict]:
     """
-    This tool finds listings based on a clothing description, with optional size (s, m, l) and max_price filters.
-    It returns a list of matching listing dictionaries.
-    
-    If there is no description or if the user's request is not clothing-related, do not refuse or halt. Instead, return an empty list []
+    Finds secondhand clothing listings, best match first (at most 10). Each is a dict with
+    id, title, description, category, style_tags, size, condition, price, colors, brand, platform.
+
+    description: keywords, e.g. "black relaxed bottoms". A garment word (tee, jeans, shorts,
+      jacket, boots...) restricts results to that category. Fit words like "relaxed" also match
+      baggy / wide-leg / oversized / straight.
+    size: exact size as listed, or omit. Tops: S, M, L, XL. Shoes: "US 7", "US 8", "US 8.5",
+      "US 9". Waist: W27-W32. Otherwise "One Size".
+    max_price: price ceiling in whole dollars, inclusive, or omit.
+    platform: preferred platform ("depop", "poshmark", "thredUp"). A ranking boost, not a filter.
+
+    Returns an empty list [] when nothing matches or the description is empty or not clothing.
     """
-    
-    return _search_listings_impl(description, size, max_price)
+
+    return _search_listings_impl(description, size, max_price, platform)
 #
 # ──────────────────────────────────────────────────────────────────────────────
 #

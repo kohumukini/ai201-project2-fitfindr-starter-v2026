@@ -36,8 +36,75 @@ SCENARIOS = [
         "criterion": None,
     },
     {
-        
-    }
+        "name": "starting clothing matches endingn clothing", 
+        "query": "vintage graphic tee under $30", 
+        "wardrobe": "example", 
+        "criterion": 3
+    }, 
+    # Criterion 4 — five different queries so the cards describe five different
+    # items (search is deterministic, so repeating one query would reuse one item).
+    {
+        "name": "fit card has price and platform (tee)",
+        "query": "vintage graphic tee under $30",
+        "wardrobe": "empty",
+        "criterion": 4
+    },
+    {
+        "name": "fit card has price and platform (trousers)",
+        "query": "wide leg linen trousers",
+        "wardrobe": "empty",
+        "criterion": 4
+    },
+    {
+        "name": "fit card has price and platform (jacket)",
+        "query": "denim jacket under $60",
+        "wardrobe": "empty",
+        "criterion": 4
+    },
+    {
+        "name": "fit card has price and platform (boots)",
+        "query": "black boots",
+        "wardrobe": "empty",
+        "criterion": 4
+    },
+    {
+        "name": "fit card has price and platform (accessory)",
+        "query": "bucket hat",
+        "wardrobe": "empty",
+        "criterion": 4
+    },
+    # Criterion 5 — same description, five ceilings (one equal to a listing's
+    # price, one below everything, one phrased differently).
+    {
+        "name": "price ceiling $40",
+        "query": "shorts or tee under $40",
+        "wardrobe": "empty",
+        "criterion": 5
+    },
+    {
+        "name": "price ceiling $20",
+        "query": "shorts or tee under $20",
+        "wardrobe": "empty",
+        "criterion": 5
+    },
+    {
+        "name": "price ceiling $14 (boundary, inclusive)",
+        "query": "shorts or tee under $14",
+        "wardrobe": "empty",
+        "criterion": 5
+    },
+    {
+        "name": "price ceiling $10 (expect empty)",
+        "query": "shorts or tee under $10",
+        "wardrobe": "empty",
+        "criterion": 5
+    },
+    {
+        "name": "price ceiling $25 (different phrasing)",
+        "query": "shorts or tee, $25 or less",
+        "wardrobe": "empty",
+        "criterion": 5
+    },
     # TODO: add what your criteria 3, 4 and 5 need.
     #
     # Set "criterion" to the number in criteria.md that the scenario tests.

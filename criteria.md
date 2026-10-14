@@ -72,7 +72,7 @@ Given an item that reaches `suggest_outfit`, the item logged as received by the 
      sentence? A card longer than a caption anyone would post? Any of those can
      be turned into a number. -->
 
-For 5 of 5 items, each fit card contains the item's price and its platform (4 of 5)
+For 5 of 5 items, each fit card contains the item's price and its platform (5 of 5)
 
 **Why this target:**
 
@@ -93,7 +93,7 @@ Given 5 different items with different price ceilings, every listing in search_r
 
 **Why this target:**
 
-There is no variance outside the size of the number, which means the price could vastly change without being recognized at the end. This also helps validate criterion 1, ensuring that the queries match the listing. 5 of 5 times, the model must filter by the correct amount. 
+There is no variance outside the size of the number, which means the price could vastly change without being recognized at the end. This also helps validate criterion 1, ensuring that the queries match the listing. 5 of 5 times, the model must filter by the correct amount.
 
 ---
 

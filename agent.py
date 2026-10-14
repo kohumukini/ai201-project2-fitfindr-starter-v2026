@@ -25,6 +25,7 @@ class ClothingInfo(BaseModel):
     description: str = ""
     size: str | None = None
     max_price: float | None = None
+    platform: str | None = None
 
 
 # ── session state ─────────────────────────────────────────────────────────────
@@ -70,9 +71,10 @@ def _parse_query(query: str) -> dict:
     system_instruction = """
         You are a search query parser for a clothing marketplace.
         Extract three things from the user's request:
-        - description: the core item (cleaned of any price limit or size).
+        - description: the core item (cleaned of any price limit, size or platform).
         - size: the clothing size if specified, otherwise null.
         - max_price: the maximum price as a number, otherwise null.
+        - platform: depop, poshmark or thredUp if the user names one, otherwise null.
 
         Write size exactly as the marketplace lists it:
         - Tops and outerwear: S, M, L or XL. Convert words: small -> S,
@@ -144,7 +146,8 @@ def _step_search(session: dict) -> None:
     results = call_tool("search_listings", {
         "description": parsed["description"], 
         "size": parsed["size"], 
-        "max_price": parsed["max_price"]
+        "max_price": parsed["max_price"],
+        "platform": parsed.get("platform"),
     })
     session["search_results"] = results
 

@@ -37,6 +37,23 @@ _STOPWORDS = frozenset(
 )
 
 
+# A query word that names a garment type restricts results to that category.
+# Keys are post-_tokenize forms (plural "s" already stripped).
+_CATEGORY_WORDS = {
+    "bottom": "bottoms", "pant": "bottoms", "trouser": "bottoms",
+    "jean": "bottoms", "short": "bottoms", "skirt": "bottoms",
+    "top": "tops", "tee": "tops", "shirt": "tops", "hoodie": "tops",
+    "jacket": "outerwear", "coat": "outerwear",
+    "shoe": "shoes", "boot": "shoes", "sneaker": "shoes",
+}
+
+# Fit words that rarely appear verbatim in listings, mapped to words that do.
+_SYNONYMS = {
+    "relaxed": {"relaxed", "baggy", "wide", "oversized", "loose", "straight"},
+    "fitted": {"fitted", "slim", "tight", "skinny"},
+}
+
+
 def _tokenize(text: str) -> set[str]:
     """
     Lowercase `text` and split it into a set of word tokens.
@@ -60,6 +77,7 @@ def search_listings(
     description: str,
     size: str | None = None,
     max_price: float | None = None,
+    platform: str | None = None,
 ) -> list[dict]:
     """
     Search the listings data for items matching a description, and optionally a
@@ -82,6 +100,8 @@ def search_listings(
                      What counts as a size match is part of your spec — decide
                      it and write it into your Tool Inventory.
         max_price:   maximum price, inclusive, or None to skip price filtering.
+        platform:    preferred platform (e.g. "poshmark"). A ranking boost, not
+                     a filter — other platforms can still be returned.
 
     Returns:
         A list of matching listing dicts, best match first.
@@ -107,10 +127,14 @@ def search_listings(
     if not query_terms:
         return []
 
+    categories = {_CATEGORY_WORDS[t] for t in query_terms if t in _CATEGORY_WORDS}
+
     scored = []
     for listing in listings:
 
         if max_price is not None and listing["price"] > max_price:
+            continue
+        if categories and listing["category"] not in categories:
             continue
         if size_tokens and not size_tokens <= _tokenize(listing["size"]):
             continue
@@ -133,16 +157,22 @@ def search_listings(
             )
         )
         desc_terms = _tokenize(listing["description"])
-        score = sum(
-            2 if term in key_terms else 1 if term in desc_terms else 0
-            for term in query_terms
-        )
+        hits = []
+        for term in query_terms:
+            options = _SYNONYMS.get(term, {term})
+            hits.append(2 if options & key_terms else 1 if options & desc_terms else 0)
+
+        # Coverage (share of query terms matched) dominates, so a listing that
+        # matches "black" AND "relaxed" beats one matching only "black".
+        score = 10 * sum(1 for h in hits if h) / len(hits) + sum(hits)
 
         # 4. Drop anything scoring zero.
         #    A listing that passed the filters but shares no words with the
         #    query is not a match; returning it would make the search look
         #    random and would stop the loop's empty-result branch from firing.
         if score > 0:
+            if platform and listing["platform"].lower() == platform.lower():
+                score += 1  # soft preference; a better content match still wins
             scored.append((score, listing))
 
     # 5. Sort by score, highest first, and return the listing dicts —

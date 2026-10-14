@@ -199,6 +199,10 @@ $ python -c 'from tools import create_fit_card; print(create_fit_card(
 - *What came back:* The full agent created based on the context provided. 
 - *What I changed:* Claude did not include trace.step, so we went through the process of adding trace.step, and I had claude go over and validate the syntax I provided. 
 
+- *What I asked for:* I asked claude to find the weakest point in the system after running eval.py, and make adjustments to tools.py accordingly
+- *What came back:* Claude added a category to the search_listings and added logic that allowed the system to search for it. It also included a ranking system for search_listings, that ranked the clothing by keywords.
+- *What I changed:* I adjusted the queries changed and added a few category words/synonyms that claude may have missed. I also asked it to consider what might have gone wrong. 
+
 <!-- ═══════════════════════ UNIT 4 — THE TEST ═══════════════════════
 
      Don't fill these in during unit 3.
@@ -414,7 +418,8 @@ A lot of changes were made:
 - Refactored the parsing system to use llm generation instead of regex
 - Refactored generate() in generate.py to allow for a pydantic model return type
 - Adjusted suggest_outfit to provide generalistic styling advice over user prompt rejection
-
+- suggest_outfit docstring underwent a large adjustment to try and get better results when it comes to what is returned
+  
 ---
 
 ## The Improvement
@@ -426,20 +431,30 @@ A lot of changes were made:
 
 **What I changed:**
 
-**Which failure it was meant to fix:**
+**Which failure it was meant to fix:** Price ceiling criteria returns the same clothing item every time.
 
 ### Run Log — After
 
 | Criterion | Target | Try 1 | Try 2 | Try 3 | Try 4 | Try 5 | Verdict |
 |---|---|---|---|---|---|---|---|
-| 1.  |  |  |  |  |  |  |  |
-| 2.  |  |  |  |  |  |  |  |
-| 3.  |  |  |  |  |  |  |  |
-| 4.  |  |  |  |  |  |  |  |
-| 5.  |  |  |  |  |  |  |  |
+| 1. matching query completes | 4 of 5 | PASS | PASS | PASS | PASS | PASS | MET(5/5) |
+| 2. impossible query stops early | 5 of 5 | PASS | PASS | PASS | PASS | PASS | MET(5/5) |
+| empty wardrobe _(diagnostic — not one of your five)_ | 5 of 5 | PASS | PASS | PASS | PASS | PASS | MET(5/5) |
+| 3. starting clothing matches endingn clothing | 5 of 5 | PASS | PASS | PASS | PASS | PASS | MET(5/5) |
+| 4. fit card has price and platform (tee) | 5 of 5 | PASS | PASS | PASS | PASS | PASS | MET(5/5) |
+| 4. fit card has price and platform (trousers) | 5 of 5 | PASS | PASS | PASS | PASS | PASS | MET(5/5) |
+| 4. fit card has price and platform (jacket) | 5 of 5 | PASS | PASS | PASS | PASS | PASS | MET(5/5) |
+| 4. fit card has price and platform (boots) | 5 of 5 | PASS | PASS | PASS | PASS | PASS | MET(5/5) |
+| 4. fit card has price and platform (accessory) | 5 of 5 | PASS | PASS | PASS | PASS | PASS | MET(5/5) |
+| 5. price ceiling $40 | 5 of 5 | PASS | PASS | PASS | PASS | PASS | MET(5/5) |
+| 5. price ceiling $20 | 5 of 5 | PASS | PASS | PASS | PASS | PASS | MET(5/5) |
+| 5. price ceiling $14 (boundary, inclusive) | 5 of 5 | PASS | PASS | PASS | PASS | PASS | MET(5/5) |
+| 5. price ceiling $10 (expect empty) | 5 of 5 | PASS | PASS | PASS | PASS | PASS | MET(5/5) |
+| 5. price ceiling $25 (different phrasing) | 5 of 5 | PASS | PASS | PASS | PASS | PASS | MET(5/5) |
 
 **Did it help, and how do I know:**
 
+The changes made did not work. After reading throughg the logs, 20 of 20 tries returned the same shorts, even with changing boundaries and changed question phrasing. 
 <!-- If it made things worse, say that. Honestly reported, that earns full
      credit and is more interesting than one that worked. -->
 
@@ -453,7 +468,7 @@ A lot of changes were made:
      you did. "I ran out of time" is fine if it's true. Pretending nothing is
      left is not. -->
 
-
+There's nothing inherently broknen. 90% of the system workks great. However, there are things that could be improved, especially when it comes to the types returned and the criteria we compare against. After all of the testing, I have realized that the criteria I set is not a good measure of how well the system works. And some of the return results are either lacking or too consistent (black shorts returning 20 of 20 times).
 
 <!-- ═════════════════════════════════════════════════════════════════════
 
