@@ -225,7 +225,7 @@ $ python -c 'from tools import create_fit_card; print(create_fit_card(
 | 1. matching query completes | 4 of 5 | PASS | PASS | PASS | PASS | PASS | MET(5/5) |
 | 2. impossible query stops early | 5 of 5 | PASS | PASS | PASS | PASS | PASS | MET(5/5) |
 | empty wardrobe _(diagnostic — not one of your five)_ | 5 of 5 | PASS | PASS | PASS | PASS | PASS | MET(5/5) |
-| 3. starting clothing matches endingn clothing | 5 of 5 | PASS | PASS | PASS | PASS | PASS | MET(5) |
+| 3. starting clothing matches ending clothing | 5 of 5 | PASS | PASS | PASS | PASS | PASS | MET(5) |
 | 4. fit card contains item's price and platform | 5 of 5 | PASS | PASS | PASS | PASS | PASS | MET(5/5) |
 | 5. items always under the price ceiling | 5 of 5 | PASS | PASS | PASS | PASS | PASS | MET(5/5) |
 
@@ -523,7 +523,6 @@ One Render deployment with per-request logging measured against created criteria
 
 ## Attempted Stretches
 
-- Second measured improvement
 - Latency breakdown
 - Load observation
 - Both run paths 
@@ -540,7 +539,10 @@ Create with Render
 
 Live Url: https://ai201-project2-fitfindr-starter-v2026-6g5b.onrender.com/health 
 
-Deployment Logs: 
+## Deployment Logs 
+
+**10-run Attempt:** Attempted to run 10 requests through a burst sh command. 
+
 ```
 ==> Deploying...
 ==> Setting WEB_CONCURRENCY=1 by default, based on available CPUs in the instance
@@ -552,6 +554,152 @@ Deployment Logs:
 127.0.0.1 - - [18/Nov/2026:05:01:13 +0000] "HEAD / HTTP/1.1" 404 0 "-" "Go-http-client/1.1"
 10.238.27.127 - - [18/Nov/2026:05:01:15 +0000] "GET /health HTTP/1.1" 200 16 "-" "Render/1.0"
 ```
+
+## Instrumentation
+
+```
+[1] parse_query (0.95s)
+      in:  vintage graphic tee under $30
+      out: {'description': 'vintage graphic tee', 'size': None, 'max_price': 30.0, 'platform': None}
+[2] search_listings (3.69s)
+      in:  description='vintage graphic tee', size=None, max_price=30.0
+      out: 10 items: Y2K Baby Tee — Butterfly Print, Vintage Band Tee — Faded Grey, Graphic Tee — 2003 Tour Bootleg Style … +7 more
+      →    branch: results found, selecting the first
+[3] suggest_outfit (1.13s)
+      in:  item='Y2K Baby Tee — Butterfly Print', wardrobe_items=10
+      out: Outfit 1: - Y2K Baby Tee — Butterfly Print - Baggy straight-leg jeans, dark wash - Chunky white sneakers - Bla…
+[4] create_fit_card (1.35s)
+      in:  item='Y2K Baby Tee — Butterfly Print', outfit='Outfit 1:\n- Y2K Baby Tee — Butterfly Print\n- Baggy straight-l…
+{"ts": "2026-11-18T05:09:42+00:00", "in": "vintage graphic tee under $30", "out": "Y2K Baby Tee \u2014 Butterfly Print", "status": 200, "error": null, "queued_s": 0.0, "duration_s": 7.124, "stages": {"parse_query": 0.951, "search_listings": 3.691, "suggest_outfit": 1.132, "create_fit_card": 1.351}, "model_calls": 3, "prompt_tokens": 995, "output_tokens": 288}
+      out: Scored this absolute dream of a Y2K baby tee on Depop for just $18, and I am obsessed with the butterfly print…
+127.0.0.1 - - [18/Nov/2026:05:09:42 +0000] "POST /ask HTTP/1.1" 200 7248 "-" "curl/8.5.0"
+[1] parse_query (1.01s)
+      in:  vintage graphic tee under $30
+      out: {'description': 'vintage graphic tee', 'size': None, 'max_price': 30.0, 'platform': None}
+[2] search_listings (4.10s)
+      in:  description='vintage graphic tee', size=None, max_price=30.0
+      out: 10 items: Y2K Baby Tee — Butterfly Print, Vintage Band Tee — Faded Grey, Graphic Tee — 2003 Tour Bootleg Style … +7 more
+      →    branch: results found, selecting the first
+[3] suggest_outfit (0.78s)
+      in:  item='Y2K Baby Tee — Butterfly Print', wardrobe_items=10
+      out: Outfit 1: - Y2K Baby Tee — Butterfly Print - Baggy straight-leg jeans, dark wash - Chunky white sneakers - Bla…
+[4] create_fit_card (0.84s)
+      in:  item='Y2K Baby Tee — Butterfly Print', outfit='Outfit 1:\n- Y2K Baby Tee — Butterfly Print\n- Baggy straight-l…
+      out: Scored this little butterfly print Y2K baby tee for eighteen bucks on Depop and I'm obsessed. It gives major n…
+{"ts": "2026-11-18T05:09:49+00:00", "in": "vintage graphic tee under $30", "out": "Y2K Baby Tee \u2014 Butterfly Print", "status": 200, "error": null, "queued_s": 0.0, "duration_s": 6.733, "stages": {"parse_query": 1.008, "search_listings": 4.103, "suggest_outfit": 0.783, "create_fit_card": 0.839}, "model_calls": 3, "prompt_tokens": 988, "output_tokens": 264}
+127.0.0.1 - - [18/Nov/2026:05:09:49 +0000] "POST /ask HTTP/1.1" 200 7190 "-" "curl/8.5.0"
+[1] parse_query (0.69s)
+      in:  vintage graphic tee under $30
+      out: {'description': 'vintage graphic tee', 'size': None, 'max_price': 30.0, 'platform': None}
+[2] search_listings (3.88s)
+      in:  description='vintage graphic tee', size=None, max_price=30.0
+      out: 10 items: Y2K Baby Tee — Butterfly Print, Vintage Band Tee — Faded Grey, Graphic Tee — 2003 Tour Bootleg Style … +7 more
+      →    branch: results found, selecting the first
+[3] suggest_outfit (1.12s)
+      in:  item='Y2K Baby Tee — Butterfly Print', wardrobe_items=10
+      out: Outfit 1 Y2K Baby Tee — Butterfly Print paired with Baggy straight-leg jeans, dark wash, Chunky white sneakers…
+[4] create_fit_card (0.73s)
+      in:  item='Y2K Baby Tee — Butterfly Print', outfit='Outfit 1\nY2K Baby Tee — Butterfly Print paired with Baggy stra…
+      out: Scored this Y2K butterfly baby tee for just $18 on Depop and I'm obsessed. It gives major early 2000s mall-got…
+{"ts": "2026-11-18T05:09:55+00:00", "in": "vintage graphic tee under $30", "out": "Y2K Baby Tee \u2014 Butterfly Print", "status": 200, "error": null, "queued_s": 0.0, "duration_s": 6.428, "stages": {"parse_query": 0.692, "search_listings": 3.881, "suggest_outfit": 1.122, "create_fit_card": 0.732}, "model_calls": 3, "prompt_tokens": 949, "output_tokens": 227}
+127.0.0.1 - - [18/Nov/2026:05:09:55 +0000] "POST /ask HTTP/1.1" 200 6997 "-" "curl/8.5.0"
+[1] parse_query (0.65s)
+      in:  vintage graphic tee under $30
+      out: {'description': 'vintage graphic tee', 'size': None, 'max_price': 30.0, 'platform': None}
+[2] search_listings (3.89s)
+      in:  description='vintage graphic tee', size=None, max_price=30.0
+      out: 10 items: Y2K Baby Tee — Butterfly Print, Vintage Band Tee — Faded Grey, Graphic Tee — 2003 Tour Bootleg Style … +7 more
+      →    branch: results found, selecting the first
+[3] suggest_outfit (1.00s)
+      in:  item='Y2K Baby Tee — Butterfly Print', wardrobe_items=10
+      out: Outfit 1: - Y2K Baby Tee — Butterfly Print - Baggy straight-leg jeans, dark wash - Chunky white sneakers - Bla…
+[4] create_fit_card (0.62s)
+      in:  item='Y2K Baby Tee — Butterfly Print', outfit='Outfit 1:\n- Y2K Baby Tee — Butterfly Print\n- Baggy straight-l…
+      out: So obsessed with this Y2K butterfly baby tee I just grabbed on Depop for $18. It gives off major early-2000s m…
+{"ts": "2026-11-18T05:10:01+00:00", "in": "vintage graphic tee under $30", "out": "Y2K Baby Tee \u2014 Butterfly Print", "status": 200, "error": null, "queued_s": 0.0, "duration_s": 6.173, "stages": {"parse_query": 0.652, "search_listings": 3.893, "suggest_outfit": 1.004, "create_fit_card": 0.624}, "model_calls": 3, "prompt_tokens": 999, "output_tokens": 280}
+127.0.0.1 - - [18/Nov/2026:05:10:01 +0000] "POST /ask HTTP/1.1" 200 7251 "-" "curl/8.5.0"
+[1] parse_query (0.66s)
+      in:  vintage graphic tee under $30
+      out: {'description': 'vintage graphic tee', 'size': None, 'max_price': 30.0, 'platform': None}
+[2] search_listings (3.91s)
+      in:  description='vintage graphic tee', size=None, max_price=30.0
+      out: 10 items: Y2K Baby Tee — Butterfly Print, Vintage Band Tee — Faded Grey, Graphic Tee — 2003 Tour Bootleg Style … +7 more
+      →    branch: results found, selecting the first
+[3] suggest_outfit (0.91s)
+      in:  item='Y2K Baby Tee — Butterfly Print', wardrobe_items=10
+      out: Outfit 1: - Y2K Baby Tee — Butterfly Print - Baggy straight-leg jeans, dark wash - Chunky white sneakers - Bla…
+[4] create_fit_card (2.33s)
+      in:  item='Y2K Baby Tee — Butterfly Print', outfit='Outfit 1:\n- Y2K Baby Tee — Butterfly Print\n- Baggy straight-l…
+      out: Finally tracked down this butterfly print Y2K baby tee on Depop for just $18 and I am obsessed. It gives major…
+{"ts": "2026-11-18T05:10:09+00:00", "in": "vintage graphic tee under $30", "out": "Y2K Baby Tee \u2014 Butterfly Print", "status": 200, "error": null, "queued_s": 0.0, "duration_s": 7.808, "stages": {"parse_query": 0.66, "search_listings": 3.907, "suggest_outfit": 0.911, "create_fit_card": 2.331}, "model_calls": 3, "prompt_tokens": 994, "output_tokens": 273}
+127.0.0.1 - - [18/Nov/2026:05:10:09 +0000] "POST /ask HTTP/1.1" 200 7185 "-" "curl/8.5.0"
+  [rate limit] 15 requests used this minute. Waiting 26s. This is normal.
+==> Instance srv-dbuirggjo6nc73a7ulv0-d466b restarted
+[2026-11-18 05:10:30 +0000] [57] [INFO] Handling signal: term
+==> Running 'gunicorn --timeout 120 serve:app'
+[2026-11-18 05:10:51 +0000] [39] [INFO] Starting gunicorn 23.0.0
+[2026-11-18 05:10:51 +0000] [39] [INFO] Listening at: http://0.0.0.0:10000 (39)
+[2026-11-18 05:10:51 +0000] [39] [INFO] Using worker: sync
+[2026-11-18 05:10:51 +0000] [40] [INFO] Booting worker with pid: 40   
+```
+
+| Criterion | Target | Run 1 | Run 2 | Run 3 | Verdict |
+|---|---|---|---|---|---|
+| 1. Queries must receive a 200 status code, no errors, and a valid output | 10 of 10 | 9/10 | 10/10 | 6/10 | MISSED |
+| 2. Requests from burst must return clean 200 status codes, while any errors must be 502 | 5/10 | 1/10 | 4/10 | 5/10 | MISSED |
+| 3. Bad inputs return a 400 status code | 5/5 | 3/5 | 3/5 | 3/5 | MISSED |
+| 4. Every request log contains ts, in, duration_s, status, and stages | 10 of 10 | 0/3 (partial log) | 5/5 (partial log) | 10/13 (partial log) | MISSED |
+| 5. Median duration of duration_s | < 6s | no full runs captured | 8.37s (5 runs, partial) | 11.74s (10 runs) | MISSED |
+
+Criterion 1 (`serve.py` `ask()`, 200 vs 502):
+```json
+{"in": "denim jacket under $50", "status": 200, "client_s": 12.31, "body": {"error": null, "selected_item": {"brand": "Wrangler", "category": "outerwear", "colors": ["light blue"], "condition": "excellent", "description": "Cropped denim jacket in a light wash. Great structured shoulders. Blank canvas — no patches or pins but would be perfect to customize.", "id": "lst_007", "platform": "poshmark", "price": 42.0, "size": "S", "style_tags": ["denim", "vintage", "classic", "streetwear"], "title": "Denim Jacket — Light Wash, Cropped"}}}
+{"in": "shorts or tee under $20", "status": 502, "client_s": 11.25, "body": null}
+```
+
+Criterion 2 (burst, same request twice; `ask()` for the 200, Render proxy for the 502):
+```json
+{"in": "vintage graphic tee under $30", "status": 200, "client_s": 41.57, "body": {"error": null, "selected_item": {"brand": null, "category": "tops", "colors": ["white", "pink", "purple"], "condition": "excellent", "description": "Super cute early 2000s baby tee with butterfly graphic. Fitted crop length. Tag says medium but fits like a small.", "id": "lst_002", "platform": "depop", "price": 18.0, "size": "S/M", "style_tags": ["y2k", "vintage", "graphic tee", "cottagecore"], "title": "Y2K Baby Tee — Butterfly Print"}}}
+{"in": "vintage graphic tee under $30", "status": 502, "client_s": 68.28, "body": null}
+```
+
+Criterion 3 (`serve.py` `ask()`; line 128 is the type bug):
+```json
+{"in": "empty query", "status": 400, "client_s": 0.17, "body": {"error": "Send JSON with a 'query' field, e.g. {\"query\": \"vintage graphic tee under $30\"}"}}
+{"in": "query is a number", "status": 500, "client_s": 2.27, "body": null}
+```
+```
+File "/opt/render/project/src/serve.py", line 128, in ask
+    query = (payload.get("query") or "").strip()
+AttributeError: 'int' object has no attribute 'strip'
+```
+
+Criterion 4 (`_log()` in `serve.py`; `stages` comes from `get_timings()` in `trace.py`). A full run has all five fields, a 400 row has no `stages`:
+```json
+{"ts": "2026-11-18T06:18:15+00:00", "in": "vintage graphic tee under $30", "out": "Y2K Baby Tee — Butterfly Print", "status": 200, "error": null, "queued_s": 0.001, "duration_s": 17.118, "stages": {"parse_query": 10.837, "search_listings": 4.426, "suggest_outfit": 1.203, "create_fit_card": 0.653}, "model_calls": 3, "prompt_tokens": 996, "output_tokens": 273}
+{"ts": "2026-11-18T06:19:23+00:00", "in": "", "status": 400, "error": "empty query", "duration_s": 0.0}
+```
+
+Criterion 5 (`scripts/summarize_log.py` over the trial 3 rows of `results/render.jsonl`):
+```
+== results/render.jsonl [trial3-rerun (Render, 06:16-06:19 UTC; C1 requests 2-6, all of C2 server-side, C3's three 400s; C1 #1 not captured)]: 13 requests ==
+full runs 10, stopped early (200 + error) 0, non-200 3
+full-run duration: mean 12.00s  median 11.74s  max 18.53s
+```
+
+## Verdicts
+Criterion 1 - Render issue combined with rate limiting. Render struggles to await the 45 seconds even with uvicorn --timeout set to 120 seconds. The error received is a 502 error.
+
+Criterion 2 - Render issue once again, with rate limiting. Our rate is 15 per minute, which is hammered in 4 requests, leaving render to attempt to deal with 45 seconds in delay with the 6 left. 
+
+Criterion 3 - No integer catch. Given invalid datatypes, we have no system to catch those and refuse. 
+
+Criterion 4 - Each request that was obstructed by either render restart, or rate limiting does not appear in the logs. Leaving us with partials. 
+
+Criterion 5 - I set too low of a timer for median durations. Because we are rate limited, there may be durations that take ~60 seconds, which is a strong enough outlier to pull most data outside of the 6 second limit. 
+
+## The Improvement
+
 
 ---
 
