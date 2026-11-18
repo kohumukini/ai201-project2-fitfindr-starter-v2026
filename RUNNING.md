@@ -125,11 +125,11 @@ Everything above exits when the command finishes. A host has nothing to keep
 running, so before you can deploy this you need something that stays up.
 `serve.py` is that: the same `run_agent()`, behind two HTTP routes.
 
-On your machine:
+Running this system:
 
 ```bash
 python serve.py
-curl -X POST http://localhost:5000/ask \
+curl -X POST https://ai201-project2-fitfindr-starter-v2026-6g5b.onrender.com \
   -H 'Content-Type: application/json' \
   -d '{"query": "vintage graphic tee under $30"}'
 ```
