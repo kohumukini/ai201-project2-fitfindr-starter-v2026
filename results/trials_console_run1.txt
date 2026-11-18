@@ -1,0 +1,55 @@
+waking service...
+
+=== trial 1 ===
+  C1 ok  200  26.03s  vintage graphic tee under $30
+  C1 ok  200  18.77s  denim jacket under $50
+  C1 ok  200  12.65s  wide leg linen trousers
+  C1 ok  200  13.95s  black boots
+  C1 ok  200  17.48s  bucket hat
+  C1 ok  200  16.02s  shorts or tee under $40
+  C1 ok  200  17.09s  shorts or tee under $20
+  C1 ok  200  13.13s  leather jacket
+  C1 ok  200  16.91s  sneakers
+  C1 BAD 502    0.5s  silk scarf
+  C1: 9/10 valid
+  C2: 1/10 returned 200; others: ['502', '502', '502', '502', '502', '502', '502', '502', '502']
+  C3 ok  400  empty query
+  C3 ok  400  missing query field
+  C3 ok  400  malformed JSON
+  C3 BAD 500  query is a number
+  C3 BAD 500  body is a JSON list
+  C3: 3/5 returned 400
+
+=== trial 2 ===
+  C1 ok  200  39.19s  vintage graphic tee under $30
+  C1 BAD 502   0.25s  denim jacket under $50
+  C1 BAD 502   0.26s  wide leg linen trousers
+  C1 BAD 502   0.24s  black boots
+  C1 BAD 502    0.3s  bucket hat
+  C1 BAD 502    0.2s  shorts or tee under $40
+  C1 BAD 502   0.18s  shorts or tee under $20
+  C1 BAD 502   0.23s  leather jacket
+  C1 BAD 502   0.24s  sneakers
+  C1 BAD 502   0.34s  silk scarf
+  C1: 1/10 valid
+  C2: 1/10 returned 200; others: ['502', '502', '502', '502', '502', '502', '502', '502', '502']
+  C3 ok  400  empty query
+  C3 ok  400  missing query field
+  C3 ok  400  malformed JSON
+  C3 BAD 500  query is a number
+  C3 BAD 500  body is a JSON list
+  C3: 3/5 returned 400
+
+=== trial 3 ===
+  C1 ok  200  27.43s  vintage graphic tee under $30
+  C1 BAD 502  16.24s  denim jacket under $50
+  C1 BAD 502   0.29s  wide leg linen trousers
+  C1 BAD 502    0.3s  black boots
+  C1 BAD 502   0.29s  bucket hat
+  C1 BAD 502   0.24s  shorts or tee under $40
+  C1 BAD 502   0.28s  shorts or tee under $20
+  C1 BAD 502   0.25s  leather jacket
+  C1 BAD 502   0.26s  sneakers
+  C1 BAD 502   0.24s  silk scarf
+  C1: 1/10 valid
+  C2: 3/10 returned 200; others: ['502', '502', '502', '502', '502', '502', '502']

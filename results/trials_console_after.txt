@@ -1,0 +1,61 @@
+waking service...
+
+=== trial 4 ===
+  C1 ok  200  16.75s  vintage graphic tee under $30
+  C1 ok  200   8.04s  denim jacket under $50
+  C1 BAD 200   0.88s  wide leg linen trousers
+  C1 ok  200   7.77s  black boots
+  C1 ok  200   7.27s  bucket hat
+  C1 ok  200  29.83s  shorts or tee under $40
+  C1 ok  200  10.63s  shorts or tee under $20
+  C1 ok  200   7.58s  leather jacket
+  C1 ok  200    7.1s  sneakers
+  C1 ok  200   6.98s  silk scarf
+  C1: 9/10 valid
+  C2: 10/10 returned 200; others: []
+  C3 ok  400  empty query
+  C3 ok  400  missing query field
+  C3 ok  400  malformed JSON
+  C3 BAD 500  query is a number
+  C3 BAD 500  body is a JSON list
+  C3: 3/5 returned 400
+
+=== trial 5 ===
+  C1 ok  200  63.39s  vintage graphic tee under $30
+  C1 ok  200   7.73s  denim jacket under $50
+  C1 ok  200   6.98s  wide leg linen trousers
+  C1 ok  200   6.96s  black boots
+  C1 ok  200   6.71s  bucket hat
+  C1 ok  200  31.47s  shorts or tee under $40
+  C1 ok  200   8.18s  shorts or tee under $20
+  C1 ok  200   6.72s  leather jacket
+  C1 ok  200   7.14s  sneakers
+  C1 ok  200    7.6s  silk scarf
+  C1: 10/10 valid
+  C2: 10/10 returned 200; others: []
+  C3 ok  400  empty query
+  C3 ok  400  missing query field
+  C3 ok  400  malformed JSON
+  C3 BAD 500  query is a number
+  C3 BAD 500  body is a JSON list
+  C3: 3/5 returned 400
+
+=== trial 6 ===
+  C1 BAD 200   0.94s  vintage graphic tee under $30
+  C1 ok  200  29.84s  denim jacket under $50
+  C1 ok  200   6.63s  wide leg linen trousers
+  C1 ok  200   7.21s  black boots
+  C1 ok  200   6.69s  bucket hat
+  C1 ok  200  12.39s  shorts or tee under $40
+  C1 ok  200  26.54s  shorts or tee under $20
+  C1 ok  200   7.52s  leather jacket
+  C1 ok  200  45.64s  sneakers
+  C1 ok  200   12.3s  silk scarf
+  C1: 9/10 valid
+  C2: 10/10 returned 200; others: []
+  C3 ok  400  empty query
+  C3 ok  400  missing query field
+  C3 ok  400  malformed JSON
+  C3 BAD 500  query is a number
+  C3 BAD 500  body is a JSON list
+  C3: 3/5 returned 400
