@@ -1,6 +1,5 @@
 # FitFindr
 
-> ### 👋 Start here
 >
 > **New to this repo? Read [RUNNING.md](RUNNING.md) first** — setup, every
 > command, and what to do when something breaks.
@@ -503,6 +502,33 @@ There's nothing inherently broknen. 90% of the system workks great. However, the
      Do not delete and recreate this repository. Your commit history is what
      shows your criteria existed before your results did.
      ═════════════════════════════════════════════════════════════════════ -->
+
+---
+
+<!-- ═══════════════════════ UNIT 9 — Capstone ═══════════════════════
+
+     ═══════════════════════════════════════════════════════════════════ -->
+
+Deployment and instrument - Deploy on Render
+
+## What this extends
+
+**FitFindr:** Existing flask service from Unit 4 which hosts a three-tool agent with MCP search and a Gemini gateway. This runs locally, yet has no logging, timing, or hosting. 
+
+## The Shape
+
+One Render deployment with per-request logging measured against created criteria. 
+
+**Out of Scope:** Reworking tools from Unit 4, the MCP layer, or model gateway. Anything that requires a major infrastructure change or any framework-based frontend
+
+## Attempted Stretches
+
+- Second measured improvement
+- Latency breakdown
+- Load observation
+- Both run paths 
+
+## What's in/out of scope? 
 
 ---
 
