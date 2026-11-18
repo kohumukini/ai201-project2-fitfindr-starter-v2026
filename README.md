@@ -711,7 +711,15 @@ Within Render, adjust the threads to 16. This allows for multiple updates for /h
 
 This helped drastically with the test results. There is a stark difference, and we met one of the 5 criteria this time. 
 
+## How I used AI
 
+- *What I asked for:* I asked claude to make a few scripts for me that would automate the testing process
+- *What came back:* Claude came back with several, that would allow for multiple trial runs and bursting so I could watch the logs. 
+- *What I changed:* I adjusted the criteria for what the scripts should watch for, and how many processes each should run. I set the burst count to 10, and adjusted the trial criteria. 
+
+- *What I asked for:* I asked claude to read through the json data and compile information for me
+- *What came back:* Claude came back with summations for our information
+- *What I changed:* I then was able to translate that into criteria material.
 ---
 
 📖 **How to run this project: [RUNNING.md](RUNNING.md)**
