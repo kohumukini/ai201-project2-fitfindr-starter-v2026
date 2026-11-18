@@ -528,7 +528,30 @@ One Render deployment with per-request logging measured against created criteria
 - Load observation
 - Both run paths 
 
-## What's in/out of scope? 
+## Deployment
+Create with Render
+- Web Service
+- Build command: pip install -r requirements.txt
+- Start Command: gunicorn --timeout 120 serve:app
+- Health Check Path: /health
+- .env Variables: 
+  - GEMINI_API_KEY
+  - AI201_CACHE
+
+Live Url: https://ai201-project2-fitfindr-starter-v2026-6g5b.onrender.com/health 
+
+Deployment Logs: 
+```
+==> Deploying...
+==> Setting WEB_CONCURRENCY=1 by default, based on available CPUs in the instance
+==> Running 'gunicorn --timeout 120 serve:app'
+[2026-11-18 05:01:13 +0000] [57] [INFO] Starting gunicorn 23.0.0
+[2026-11-18 05:01:13 +0000] [57] [INFO] Listening at: http://0.0.0.0:10000 (57)
+[2026-11-18 05:01:13 +0000] [57] [INFO] Using worker: sync
+[2026-11-18 05:01:13 +0000] [58] [INFO] Booting worker with pid: 58
+127.0.0.1 - - [18/Nov/2026:05:01:13 +0000] "HEAD / HTTP/1.1" 404 0 "-" "Go-http-client/1.1"
+10.238.27.127 - - [18/Nov/2026:05:01:15 +0000] "GET /health HTTP/1.1" 200 16 "-" "Render/1.0"
+```
 
 ---
 
