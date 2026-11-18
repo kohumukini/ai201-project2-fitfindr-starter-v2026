@@ -167,6 +167,7 @@ def ask():
         
         after = generate.token_counts()
         finished = time.perf_counter()
+        stages = trace.get_timings()
         
     _log({
         "ts": _now(),
@@ -176,7 +177,7 @@ def ask():
         "error": failure or session["error"],
         "queued_s": round(started - arrived, 3),
         "duration_s": round(finished - started, 3),
-        "stages": trace.get_timings(),
+        "stages": stages,
         "model_calls": generate.call_count() - calls_before,
         "prompt_tokens": after["prompt"] - before["prompt"],
         "output_tokens": after["output"] - before["output"],
