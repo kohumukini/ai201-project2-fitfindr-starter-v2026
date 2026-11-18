@@ -525,7 +525,6 @@ One Render deployment with per-request logging measured against created criteria
 
 - Latency breakdown
 - Load observation
-- Both run paths 
 
 ## Deployment
 Create with Render
@@ -688,7 +687,7 @@ full-run duration: mean 12.00s  median 11.74s  max 18.53s
 ```
 
 ## Verdicts
-Criterion 1 - Render issue combined with rate limiting. Render struggles to await the 45 seconds even with uvicorn --timeout set to 120 seconds. The error received is a 502 error.
+Criterion 1 - Render issue combined with rate limiting. Render struggles to await the 45 seconds even with gunicorn --timeout set to 120 seconds. The error received is a 502 error.
 
 Criterion 2 - Render issue once again, with rate limiting. Our rate is 15 per minute, which is hammered in 4 requests, leaving render to attempt to deal with 45 seconds in delay with the 6 left. 
 
@@ -699,6 +698,18 @@ Criterion 4 - Each request that was obstructed by either render restart, or rate
 Criterion 5 - I set too low of a timer for median durations. Because we are rate limited, there may be durations that take ~60 seconds, which is a strong enough outlier to pull most data outside of the 6 second limit. 
 
 ## The Improvement
+Within Render, adjust the threads to 16. This allows for multiple updates for /health and maintains the app so it doesn't shut down, allowing for more data. 
+
+
+| Criterion | Target | Run 1 | Run 2 | Run 3 | Verdict |
+|---|---|---|---|---|---|
+| 1. Queries must receive a 200 status code, no errors, and a valid output | 10 of 10 | 9/10 | 10/10 | 9/10 | MISSED |
+| 2. Requests from burst must return clean 200 status codes, while any errors must be 502 | 5/10 | 10/10 | 10/10 | 10/10 | MET |
+| 3. Bad inputs return a 400 status code | 5/5 | 3/5 | 3/5 | 3/5 | MISSED |
+| 4. Every request log contains ts, in, duration_s, status, and stages | 10 of 10 | 20/23 | 20/23 | 20/23 | MISSED |
+| 5. Median duration of duration_s | < 6s | 7.89s (19 runs) | 7.55s (20 runs) | 7.05s (19 runs) | MISSED |
+
+This helped drastically with the test results. There is a stark difference, and we met one of the 5 criteria this time. 
 
 
 ---
