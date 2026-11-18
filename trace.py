@@ -26,16 +26,20 @@ in the step name — `search_listings (via MCP)` is enough.
 """
 
 import config
+import time
 
 _lines: list[str] = []
 _step_number = 0
-
+_timings: list[tuple[str, float]] = []
+_last = 0.0
 
 def start_trace() -> None:
     """Clear the trace. Call this at the start of each run."""
-    global _step_number
+    global _step_number, _last
+    _timings.clear()
     _lines.clear()
     _step_number = 0
+    _last = time.perf_counter()
 
 
 def step(name: str, inputs=None, returned=None, note: str = "") -> None:
@@ -49,10 +53,13 @@ def step(name: str, inputs=None, returned=None, note: str = "") -> None:
                   list of listings is fine.
         note:     an optional word on why, e.g. "branch: empty, stopping".
     """
-    global _step_number
+    global _step_number, _last
+    now = time.perf_counter()
+    _timings.append((name, now - _last))
+    _last = now
     _step_number += 1
 
-    line = f"[{_step_number}] {name}"
+    line = f"[{_step_number}] {name} ({_timings[-1][1]:.2f}s)"
     if inputs is not None:
         line += f"\n      in:  {_short(inputs)}"
     if returned is not None:
@@ -62,6 +69,11 @@ def step(name: str, inputs=None, returned=None, note: str = "") -> None:
 
     _lines.append(line)
     print(line, flush=True)
+    
+def get_timings() -> dict: 
+    return {
+        name: round(sec, 3) for name, sec in _timings
+    }
 
 
 def get_trace() -> str:

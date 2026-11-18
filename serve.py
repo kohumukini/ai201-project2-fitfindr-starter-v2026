@@ -40,10 +40,13 @@ import threading
 # config first, and before anything that talks to the model: it loads your .env
 # and fixes the Windows console encoding for every module that imports it.
 import config  # noqa: F401
+import json, time, generate, trace
 
 from flask import Flask, jsonify, request
 
 from agent import run_agent
+from datetime import datetime, timezone
+
 from utils.data_loader import get_example_wardrobe
 
 app = Flask(__name__)
@@ -90,6 +93,19 @@ app = Flask(__name__)
 
 _one_at_a_time = threading.Lock()
 
+LOG_PATH = config.RESULTS_DIR / "requests.jsonl"
+
+def _log(record: dict) -> None: 
+    line = json.dumps(record)
+    print(line, file=sys.stderr, flush=True)
+    try: 
+        with open(LOG_PATH, "a", encoding="utf-8") as f:
+            f.write(line + "\n")
+    except OSError: 
+        pass
+    
+def _now() -> str:
+    return datetime.now(timezone.utc).isoformat(timespec="seconds")
 
 @app.get("/health")
 def health():
@@ -107,10 +123,13 @@ def ask():
                                                 example wardrobe the CLI uses.
     Out:  the session dict from run_agent(), as JSON.
     """
+    arrived = time.perf_counter()
     payload = request.get_json(silent=True) or {}
     query = (payload.get("query") or "").strip()
     if not query:
         # 400 rather than a stack trace: the caller can act on this one.
+        _log({"ts": _now(), "in": query, "status": 400, "error": "empty query",
+            "duration_s": round(time.perf_counter() - arrived, 3)})
         return jsonify({"error": "Send JSON with a 'query' field, e.g. "
                                  '{"query": "vintage graphic tee under $30"}'}), 400
 
@@ -139,10 +158,29 @@ def ask():
     failure = None
     session = None
     with _one_at_a_time:
+        started = time.perf_counter()
+        before = generate.token_counts(); calls_before = generate.call_count()
         try:
             session = run_agent(query, wardrobe)
         except Exception as exc:  # noqa: BLE001 — a 500 with a sentence beats a hang
             failure = f"{type(exc).__name__}: {exc}"
+        
+        after = generate.token_counts()
+        finished = time.perf_counter()
+        
+    _log({
+        "ts": _now(),
+        "in": query,
+        "out": failure or session["error"] or (session["selected_item"] or {}).get("title"),
+        "status": 500 if failure else 200,
+        "error": failure or session["error"],
+        "queued_s": round(started - arrived, 3),
+        "duration_s": round(finished - started, 3),
+        "stages": trace.get_timings(),
+        "model_calls": generate.call_count() - calls_before,
+        "prompt_tokens": after["prompt"] - before["prompt"],
+        "output_tokens": after["output"] - before["output"],
+    })
 
     # Outside the lock: building a response is not work the next caller should
     # be waiting on.
