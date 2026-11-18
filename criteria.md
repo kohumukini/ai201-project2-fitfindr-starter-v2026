@@ -130,3 +130,22 @@ There is no variance outside the size of the number, which means the price could
      ───────────────────────────────────────────────────────────────────────── -->
 # Unit 9 Acceptance Criteria - Capstone
 
+## 1. 10 Distinct queries must receive a 200 status code, an error of null, and a valid selected_item or recommendation
+
+Every valid request should return a valid status code, and a valid output. 10 queries gives enough boundaries for different requests to be tested.
+
+## 2. 5/10 requests from a burst must return clean 200 status codes, while any errors MUST be 502
+
+We currently have rate limiting. Therefore, at least half of the requests in a burst must come back with a valid response. The rest must contain no other error than 502.
+
+## 3. 5/5 bad inputs (empty query, bad information, etc) return a 400 status code
+
+Bad inputs should always be rejected. 5 is the chosen number to allow for enough diversity without redundancy. 
+
+## 4. Every request log contains ts, in, duration_s, status, and stages
+
+Since each request is getting logged, every request must contain a clean slate of information for the reader. And since every request uses the same logging system, every log should be formatted similarly.
+
+## 5. The median duration of duration_s must not exceed 6 seconds
+
+Most durations appear to be <3.4 seconds. It is reasonable that there are going to be outliers, so 6 seconds, which is almost double the number given, is a reasonable buffer. 
