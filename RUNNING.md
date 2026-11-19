@@ -129,7 +129,7 @@ Running this system:
 
 ```bash
 python serve.py
-curl -X POST https://ai201-project2-fitfindr-starter-v2026-6g5b.onrender.com \
+curl -X POST https://ai201-project2-fitfindr-starter-v2026-6g5b.onrender.com/ask \
   -H 'Content-Type: application/json' \
   -d '{"query": "vintage graphic tee under $30"}'
 ```
